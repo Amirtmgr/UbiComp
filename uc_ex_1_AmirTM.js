@@ -169,8 +169,8 @@ class ClockView {
   }
   
   drawDot(angle){
-    //Large dot in each 15 degrees 
-    const radius = (angle % 15) ? 2.5 : 5;
+    //Large dot in each 30 degrees 
+    const radius = (angle % 30) ? 2.5 : 5;
     const a = angle * this.pRad;
     const x = LCDAttr.centerX + Math.sin(a) *   this.faceRad;
     const y = LCDAttr.centerY - Math.cos(a) * this.faceRad;
