@@ -744,7 +744,6 @@ class Keyboard {
           this.altKeys = !this.altKeys;
         } else {
           this.callback(str, this.reset, update);
-          this.altKeys = this.reset ? true : this.altKeys;
           this.reset = false;
         }
         break;
