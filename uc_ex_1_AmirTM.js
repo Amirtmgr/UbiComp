@@ -455,7 +455,6 @@ class NoteApp {
 
   //Save note to csv.
   saveNote() {
-    clearWatch();
     this.savingNote = true;
     Note = Note.trim();
     if (Note == InfoType || Note.length == 0) {
@@ -967,12 +966,14 @@ const switchApp = () => {
   switch (appIndex) {
     case 0:
       stopTimers();
-      setTimeout(initNoteList, 1000);
+      setTimeout(initNoteList, 800);
       break;
     case 1:
+      E.showMenu();
+      clearWatch();
       if (prevAppIndex == 2) {
         noteApp.saveNote(this);
-        setTimeout(startTimers, 1000);
+        setTimeout(startTimers, 800);
       } else {
         startTimers();
       }
