@@ -1,16 +1,25 @@
-/*  UbiComp Ex. 1
+/*  UbiComp Ex. 2
  Submitted by Amir Thapa Magar
  Student of MSc. CS (Winter 20/21)
  Matriculation No.: 1607576
+
+ !!Please Run This Code in Flash.
+ !!RAM Doesn't support this App in IDE.
+ 
+ Info: This contains : 
+    1. Watch Face App --> Middle App
+    2. Note Taking App ---> Right App
+    3. Note Listing App ---> Left App 
+ 
+    SWIPE LEFT OR RIGHT TO SWITCH APPS.
  */
 
 //Required
-require("FontCopasetic40x58Numeric").add(Graphics);
-require("FontTeletext10x18Ascii").add(Graphics);
 require("Font8x16").add(Graphics);
-require("Font8x12").add(Graphics);
 
 //Global Constants
+var Note = "Type here!";
+const InfoType = "Type here!";
 const locale = require('locale');
 const imgStep = {
   width: 35, height: 35, bpp: 8,
@@ -43,8 +52,9 @@ const imgSpace = {
 
 //Global Var
 var timer, noteApp;
-var apps = [0, 1];
-var appIndex = 0;
+var apps = [0, 1, 2];
+var appIndex = 1;
+var prevAppIndex = 1;
 
 //LCD Attributes class
 class LCDAttr {
@@ -83,10 +93,6 @@ class UIColors {
     g.setColor(0, 0, 0);
   }
 
-  static gray() {
-    g.setColor(200 / 255, 200 / 255, 200 / 255);
-  }
-
   static paper() {
     g.setColor(127 / 255, 129 / 255, 131 / 255);
   }
@@ -106,24 +112,12 @@ class UIColors {
     g.setColor(3 / 255, 146 / 255, 254 / 255);
   }
 
-  static cyan() {
-    g.setColor(8 / 255, 206 / 255, 216 / 255);
-  }
-
-  static yellow() {
-    g.setColor(1, 207 / 255, 27 / 255);
-  }
-
   static red() {
     g.setColor(244 / 255, 54 / 255, 59 / 255);
   }
 
   static green() {
     g.setColor(46 / 255, 204 / 255, 113 / 255);
-  }
-
-  static accent() {
-    g.setColor(54 / 255, 238 / 255, 224 / 255);
   }
 
   static primary() {
@@ -133,30 +127,11 @@ class UIColors {
   static tint() {
     g.setColor(249 / 255, 156 / 255, 57 / 255);
   }
-  static secondary() {
-    g.setColor(245 / 255, 245 / 255, 245 / 255);
-  }
-
-  static aqua() {
-    g.setColor(42 / 255, 183 / 255, 171 / 255);
-  }
-
-  static ocean() {
-    g.setColor(63 / 255, 141 / 255, 141 / 255);
-  }
 
 }
 
 //UIFonts
 class UIFonts {
-  static setTeleText() {
-    g.setFontTeletext10x18Ascii();
-  }
-
-  static setCopasetic() {
-    g.setFontCopasetic40x58Numeric();
-  }
-
   static set6X8(size) {
     g.setFont("6x8", size);
   }
@@ -167,9 +142,6 @@ class UIFonts {
 
   static setFont8x16() {
     g.setFont8x16();
-  }
-  static setFont8x12() {
-    g.setFont8x12();
   }
 
   static alignCenter() {
@@ -386,82 +358,23 @@ class StepView {
   }
 }
 
-//Load function
-function loadView() {
-  g.clear();
-  g.setBgColor(0, 0, 0);
-  g.drawImage(imgCal);
 
-  if (appIndex == 0) {
-    let timeView = new TimeView();
-    timeView.loadView();
-
-    let clockView = new ClockView();
-    clockView.loadView();
-
-    let stepView = new StepView();
-    stepView.loadView();
-  }
-}
-
-//Timer ArrowFunctions
-const startTimers = () => {
-  timer = setInterval(loadView, 500);
-};
-
-const stopTimers = () => {
-  clearInterval(timer);
-};
-
-//Start
-startTimers();
-
-//Bangle On swipe change app
-Bangle.on('swipe', (sDir) => {
-  let prevIndex = appIndex;
-  if (sDir == 1) {
-    print("swipe left");
-    if (appIndex > 0) {
-      appIndex--;
-    }
-    print(appIndex);
-  } else {
-    print("swipe right");
-    if (appIndex < (apps.length - 1)) {
-      appIndex++;
-    }
-    print(appIndex);
-  }
-  if (prevIndex !== appIndex) {
-    switchApp();
-  }
-});
-
-//StartTimer ArrowFunction
-const switchApp = () => {
-  switch (appIndex) {
-    case 0:
-      clearWatch();
-      startTimers();
-      break;
-    case 1:
-      stopTimers();
-      noteApp = new NoteApp();
-      noteApp.loadView();
-      break;
-    default:
-      break;
-  }
-};
-
-//NoteApp Class
+/* 
+  Note Taking App
+  AppIndex = 2
+  Swipe right to open.
+  Swipe left to close.
+  Instantiates Keyboard
+*/
 class NoteApp {
   constructor() {
-    this.note = "Please type your note!";
-    print("NoteApp loading.");
+    this.note = InfoType;
     this.keyboard = new Keyboard(this.renderText);
+    this.file = require("Storage").open("notes.csv", "a");
+    this.noteDate = new TimeView().getTime();
   }
 
+  //Load view of note taking app.
   loadView() {
     g.clear();
     this.keyboard.initFunc();
@@ -475,16 +388,12 @@ class NoteApp {
     g.drawRect(5, 15, LCDAttr.width - 5, 120 - 5);
   }
 
-  renderDate() {
-
-  }
-
+  //Render typed text.
   renderText(str, reset, update) {
     this.note = reset ? "" : this.note;
     var tempNote = this.note;
     this.note = this.note.slice(0, update ? -2 : -1);
     if (str == "\b" && this.note.length > 1) {
-      print("removing char");
       this.note = this.note.slice(0, -1);
     } else if (str !== "\b") {
       if (str === "\n") {
@@ -492,7 +401,6 @@ class NoteApp {
           return;
         }
       }
-      print("adding char");
       this.note = reset ? str : this.note + str;
       let arrSent = this.note.split("\n");
       let lastSent = arrSent.slice(-1)[0];
@@ -500,11 +408,7 @@ class NoteApp {
       let lastWord = tempWords.slice(-1)[0];
       let lastWordWidth = g.stringWidth(lastWord);
       let lastSentWidth = g.stringWidth(lastSent);
-      print(lastSentWidth);
-      print(lastSent);
-      print(lastWord);
-      print(lastWordWidth);
-      if (lastSentWidth > 170) {
+      if (lastSentWidth > 140) {
         this.note = arrSent.slice(0, -1).join("\n");
         this.note += (this.note.length > 5) ? "\n" : "";
         this.note += tempWords.slice(0, -1).join(" ") + "\n";
@@ -513,10 +417,8 @@ class NoteApp {
     }
 
     this.note += "_";
-    print(this.note);
     let textHeight = g.getFontHeight() * this.note.split("\n").length;
-    print("heigh:" + textHeight);
-    if (textHeight >= 56) {
+    if (textHeight > 60) {
       this.note = tempNote;
       return;
     }
@@ -527,14 +429,64 @@ class NoteApp {
     g.drawRect(5, 15, LCDAttr.width - 5, 120 - 5);
     UIColors.white();
     UIFonts.setVector(15);
-    //UIFonts.setFont8x16();
+    Note = this.note.slice(0, -1);
     g.drawString(this.note, 10, 20);
+  }
+
+  //Show dialog for note.
+  showDialog(isSave) {
+    UIColors.black();
+    g.fillRect(0, 0, LCDAttr.width, 120);
+    UIColors.black();
+    g.fillRect(20, 30, 220, 100);
+    UIColors.white();
+    g.drawRect(20, 30, 220, 100);
+    g.drawRect(22, 32, 218, 98);
+    UIFonts.alignCenter();
+    UIFonts.setVector(20);
+
+    if (isSave) {
+      UIColors.sun();
+    } else {
+      UIColors.red();
+    }
+    g.drawString(isSave ? "Saving..." : "Cancelling...", 120, 60);
+  }
+
+  //Save note to csv.
+  saveNote() {
+    clearWatch();
+    this.savingNote = true;
+    Note = Note.trim();
+    if (Note == InfoType || Note.length == 0) {
+      this.showDialog(false);
+    } else {
+      Note = Note.replace("\n", "*0L");
+      //[hrStr, minStr, meridian, dateStr]
+      let time = this.noteDate[0] + ":" + this.noteDate[1] + this.noteDate[2];
+      let date = this.noteDate[3].join(" ");
+      var csv = [
+        Note,
+        time,
+        date
+      ];
+      // Write data here
+      this.file.write(csv.join(",") + "\n");
+      this.showDialog(true);
+    }
+    Note = InfoType;
   }
 }
 
-//Keyboard Class
+/*
+  Keyboard class 
+  Keyboard views and Functions
+*/
+
 class Keyboard {
+
   constructor(callback) {
+    this.savingNote = false;
     this.pressTime = 0;
     this.prevPressTime = 0;
     this.releaseTime = 0;
@@ -650,14 +602,14 @@ class Keyboard {
     };
   }
 
+  //Draw single key.
   drawKey(key, area, center) {
     let tempSelected = (key == this.selectedKey);
     let value = this.KEYS[key];
     g.setColor(value.COLOR[tempSelected ? 1 : 0]);
     g.fillRect(area[0], area[1], area[2], area[3]);
     UIColors.white();
-    //UIFonts.set6X8(1);
-    UIFonts.setFont8x12();
+    UIFonts.set6X8(1);
     switch (key) {
       case 4:
         g.drawImage(imgBks, area[0] + 10, area[1] + 5);
@@ -686,8 +638,8 @@ class Keyboard {
     }
   }
 
+  //Moving key press.
   moveIndex(d) {
-    print(d);
     switch (d) {
       case "U": {
         if (this.selectedKey > 4) {
@@ -750,7 +702,6 @@ class Keyboard {
       }
       case "NUM": {
         let str = this.KEYS[this.selectedKey].MAIN_VAL;
-        print("NUM case");
         this.callback(str, this.reset);
         break;
       }
@@ -760,56 +711,53 @@ class Keyboard {
     this.drawKeys();
   }
 
+  //Action to BTN2 press
   listenBTN2(press) {
     if (press === true) {
-      console.log("Button pressed");
       this.prevPressTime = this.pressTime;
       digitalWrite(LED2, 1);
       this.pressTime = new Date();
-      this.startSpaceTimer();
     }
   }
 
+  //Action to BTN2 release 
+  //Calculate keypad press speed.
   pressCount() {
-    console.log("Button let go");
     digitalWrite(LED2, 0);
     this.releaseTime = new Date();
     let diff = this.releaseTime - this.pressTime;
-    print(diff);
-    print(this.pressTime);
     if (diff >= 400) {
-      print("pressed two secs");
       this.moveIndex("NUM");
       this.pressTime = 0;
       this.releaseTime = 0;
       this.charIndex = 0;
       this.prevPressTime = 0;
     } else {
-      print("pressed less than two secs");
       let diffPress = this.pressTime - this.prevPressTime;
-      print("ss" + diffPress);
       this.charIndex = (diffPress < 400) ? this.charIndex + 1 : 0;
       this.moveIndex("=");
-      print(this.charIndex);
     }
   }
 
+  //Init method
   initFunc() {
     g.clear();
-    // listen to button press
+    // listen to BTN2 press
     setWatch(_ => this.listenBTN2(true), BTN2, { repeat: true, edge: 'rising' });
-
-    // listen to button release
+    // listen to BTN2 release
     setWatch(_ => this.pressCount(), BTN2, { repeat: true, edge: 'falling' });
+
+    // listen to BTN5 button release
+    setWatch(_ => this.moveIndex("R"), BTN5, { repeat: true, edge: 'falling' });
+    // listen to BTN4 button release
+    setWatch(_ => this.moveIndex("L"), BTN4, { repeat: true, edge: 'falling' });
 
     setWatch(_ => this.moveIndex("U"), BTN1, { repeat: true });
     setWatch(_ => this.moveIndex("D"), BTN3, { repeat: true });
-    setWatch(_ => this.moveIndex("L"), BTN4, { repeat: true });
-    setWatch(_ => this.moveIndex("R"), BTN5, { repeat: true });
-
     this.drawKeys();
   }
 
+  //Method to draw keypad.
   drawKeys() {
     for (var k in this.KEYS) {
       let x1 = this.KEY_WIDTH * (k % 5);
@@ -822,3 +770,222 @@ class Keyboard {
     }
   }
 }
+
+/*
+//NotepadList App Functions
+//AppIndex = 0
+//App to show notes details.
+*/
+//Global vars
+var notesList = {};
+var subMenu = {};
+var notes = [];
+var selectedNote = 0;
+var f = require("Storage").open("notes.csv", "r");
+var l = "";
+
+//Init func
+function initNoteList() {
+  //load note list
+  notesList = {};
+  subMenu = {};
+  notes = [];
+  selectedNote = 0;
+  l = "";
+  f = require("Storage").open("notes.csv", "r");
+  readNotes();
+}
+
+//Read notes from CSV
+function readNotes() {
+  notes = [];
+  l = " ";
+
+  while (l !== undefined) {
+    l = f.readLine();
+    if (l === undefined) {
+      break;
+    }
+    let str = String(l);
+    notes.push(str);
+  }
+  showList(notes);
+}
+
+//Show Note List.
+function showList(n) {
+  notesList = {
+    "": { title: "Notes List" }
+  };
+  var i = 0;
+  for (i = 0; i < n.length; i++) {
+    let item = n[i];
+    let strArr = String(item).split(",");
+    let t = strArr[0].replace("*0L", " ").slice(0, 7);
+    notesList[i + 1 + "." + t] = viewNote.bind(this, i);
+  }
+  if (notes.length == 0) {
+    notesList.Empty = function () { };
+  }
+  E.showMenu(notesList);
+}
+
+//Draw Note Detail.
+function viewNote(index) {
+  E.showMenu();
+  selectedNote = index;
+  let note = notes[index];
+  let strArr = note.split(",");
+  let data = strArr;
+  let time = data[1];
+  let date = data[2];
+  let msg = data[0].replace("*0L", "\n");
+  UIColors.white();
+  g.fillRect(0, 0, 240, 240);
+  UIColors.sun();
+  g.drawRect(10, 10, 230, 230);
+  UIFonts.setVector(12);
+  UIFonts.alignRightBottom();
+  UIColors.tint();
+  g.drawString(date, 220, 25);
+  g.drawString(time, 220, 43);
+  UIFonts.alignLeftTop();
+  UIColors.black();
+  UIFonts.setVector(15);
+  g.drawString(msg, 20, 50);
+  UIColors.paper();
+  g.fillRect(60, 190, 180, 220);
+  UIColors.tint();
+  g.drawRect(60, 190, 180, 220);
+  g.drawRect(58, 188, 178, 218);
+  UIColors.sun();
+  UIFonts.alignCenter();
+  g.drawString("Delete", 120, 205);
+  UIColors.paper(); g.drawPoly([232, 120, 240, 120, 236, 117, 240, 120, 236, 123], false);
+  this.listenBtn();
+}
+
+//Listen to btn.
+function listenBtn() {
+  setWatch(showPrompt, BTN2, { 'repeat': true });
+  setWatch(goBack, BTN1, { 'repeat': false });
+}
+
+//Prompt to delete note.
+function showPrompt() {
+  E.showPrompt("Delete Note?").then(function (v) {
+    if (v) {
+      deleteItem(selectedNote);
+    } else {
+      viewNote(selectedNote);
+    }
+  });
+}
+
+//Go back to Notes List.
+function goBack() {
+  E.showMenu(notesList);
+}
+
+//Delete Note
+function deleteItem(i) {
+  notes.splice(i, 1);
+  removeNote(i);
+  notes = [];
+  initNoteList();
+}
+
+//Remove Note from CSV file.
+function removeNote(index) {
+  f.erase();
+  f = require("Storage").open("notes.csv", "a");
+  var i = 0;
+  for (i = 0; i < notes.length; i++) {
+    var items = notes[i].split(",");
+    let n = items[0];
+    let t = items[1];
+    var d = items[2];
+    d = d.replace("\n", "");
+    let csv = [n, t, d].join(",");
+    f.write(csv + "\n");
+  }
+}
+
+/*
+Entry point
+*/
+
+//Timer ArrowFunctions
+const startTimers = () => {
+  timer = setInterval(loadView, 500);
+};
+
+const stopTimers = () => {
+  clearInterval(timer);
+};
+
+
+//Load function
+function loadView() {
+  g.clear();
+  g.setBgColor(0, 0, 0);
+  g.drawImage(imgCal);
+
+  if (appIndex == 1) {
+    let timeView = new TimeView();
+    timeView.loadView();
+
+    let clockView = new ClockView();
+    clockView.loadView();
+
+    let stepView = new StepView();
+    stepView.loadView();
+  }
+}
+
+//Listen swipe
+Bangle.on('swipe', (sDir) => {
+  let prevIndex = appIndex;
+  if (sDir == 1) {
+    if (appIndex > 0) {
+      prevAppIndex = appIndex;
+      appIndex--;
+    }
+  } else {
+    if (appIndex < (apps.length - 1)) {
+      prevAppIndex = appIndex;
+      appIndex++;
+    }
+  }
+  if (prevIndex !== appIndex) {
+    switchApp();
+  }
+});
+
+//StartTimer ArrowFunction
+const switchApp = () => {
+  switch (appIndex) {
+    case 0:
+      stopTimers();
+      setTimeout(initNoteList, 1000);
+      break;
+    case 1:
+      if (prevAppIndex == 2) {
+        noteApp.saveNote(this);
+        setTimeout(startTimers, 1000);
+      } else {
+        startTimers();
+      }
+      break;
+    case 2:
+      stopTimers();
+      noteApp = new NoteApp();
+      noteApp.loadView();
+      break;
+    default:
+      break;
+  }
+};
+
+//Start
+startTimers();
