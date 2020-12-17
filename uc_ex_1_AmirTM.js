@@ -966,7 +966,7 @@ const switchApp = () => {
   switch (appIndex) {
     case 0:
       stopTimers();
-      setTimeout(initNoteList, 800);
+      initNoteList();
       break;
     case 1:
       E.showMenu();
