@@ -393,7 +393,7 @@ class NoteApp {
     this.note = reset ? "" : this.note;
     var tempNote = this.note;
     this.note = this.note.slice(0, update ? -2 : -1);
-    if (str == "\b" && this.note.length > 1) {
+    if (str == "\b" && this.note.length > 0) {
       this.note = this.note.slice(0, -1);
     } else if (str !== "\b") {
       if (str === "\n") {
