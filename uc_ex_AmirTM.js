@@ -1,4 +1,4 @@
-/*  UbiComp Ex. 2
+/*  UbiComp Ex.3
  Submitted by Amir Thapa Magar
  Student of MSc. CS (Winter 20/21)
  Matriculation No.: 1607576
@@ -13,261 +13,115 @@
  
     SWIPE LEFT OR RIGHT TO SWITCH APPS.
  */
-
-//Required
-require("Font8x16").add(Graphics);
-
-//Global Constants
-var Note = "Type here!";
-const InfoType = "Type here!";
-const locale = require('locale');
-const imgStep = {
-  width: 35, height: 35, bpp: 8,
-  transparent: 254,
-  buffer: require("heatshrink").decompress(atob("/wA/AH4A/AH4A/AH4A/AF0+AAIGFELYcDFAwhXDgoidAAwheVbgiJFCYTDIRQiXDJRtUEY4kbeA4bGI6xIFaLKkPFS4kKaiZtLBIpIfEQaXYbZAiZNpAiaEg4icRTwA5"))
-};
-const imgCal = {
-  width: 30, height: 30, bpp: 8,
-  transparent: 254,
-  buffer: require("heatshrink").decompress(atob("/wA/AAXX64LVCI4SIBRQAD3YACCIPQAwYAD6ALBAwYcKy4dNy4eJDo3JDo/JDqAeB0oREBRYdKACQdjYIQAUDv4d/Dv4d/Dv4d/DtIeWDgwA/AGg"))
-};
-
-const imgEnt = {
-  width: 30, height: 30, bpp: 8,
-  transparent: 0,
-  buffer: require("heatshrink").decompress(atob("AFf/ABYcQFJocaDyBLPDv4d/BpoHPDvD1BAA4dSRZ4dMDiIdyExIdSIZQdRDhYdQDiYdIeRL1JHZa6SO5bZVQRAeRd6odTLKoeYDIgeXC4zsMe6YAXA="))
-};
-
-const imgBks = {
-  width: 30, height: 30, bpp: 8,
-  transparent: 0,
-  buffer: require("heatshrink").decompress(atob("AH4A/AHX/ACgcIGSocaC4QFKDqwcXDAgcJJJ4JCOhQKEB5aRNBgQPLahIPTDrxZdSrzReBxYAOFp4dUDywWGDyoVIc4QASR64A/AH4Ac"))
-};
-
-const imgSpace = {
-  width: 30, height: 30, bpp: 8,
-  transparent: 254,
-  buffer: require("heatshrink").decompress(atob("/wA/AH4A/AH4A/ABfX64VaAwIdWCwgd/DrgAWDsIeYf6oA/AH4A/AH4A2A=="))
-};
-
-//Global Var
-var timer, noteApp;
-var apps = [0, 1, 2];
-var appIndex = 1;
-var prevAppIndex = 1;
-
-//LCD Attributes class
-class LCDAttr {
-  static get widgetHeight() {
-    return 13;
+//Utilities
+function getImgStep() {
+  const imgStep = {
+    width: 35, height: 35, bpp: 8,
+    transparent: 254,
+    buffer: require("heatshrink").decompress(atob("/wA/AH4A/AH4A/AH4A/AF0+AAIGFELYcDFAwhXDgoidAAwheVbgiJFCYTDIRQiXDJRtUEY4kbeA4bGI6xIFaLKkPFS4kKaiZtLBIpIfEQaXYbZAiZNpAiaEg4icRTwA5"))
+  };
+  return imgStep;
+}
+function getImgCal() {
+  const imgCal = {
+    width: 30, height: 30, bpp: 8,
+    transparent: 254,
+    buffer: require("heatshrink").decompress(atob("/wA/AAXX64LVCI4SIBRQAD3YACCIPQAwYAD6ALBAwYcKy4dNy4eJDo3JDo/JDqAeB0oREBRYdKACQdjYIQAUDv4d/Dv4d/Dv4d/DtIeWDgwA/AGg"))
+  };
+  return imgCal;
+}
+//HomeView 
+class HomeView {
+  constructor() {
+    this.clockView = new ClockView();
+    this.stepView = new StepView();
+    this.timeView = new TimeView();
   }
-
-  static get height() {
-    return g.getHeight();
-  }
-
-  static get width() {
-    return g.getWidth();
-  }
-
-  static get centerY() {
-    return this.height / 2 + this.widgetHeight;
-  }
-
-  static get centerX() {
-    return this.width / 2;
-  }
-
-  static get center() {
-    return [this.centerX, this.centerY];
+  loadView() {
+    g.clear();
+    this.clockView.loadView();
+    this.stepView.loadView();
+    this.timeView.loadView();
   }
 }
-
-//UIColors 
-class UIColors {
-  static white() {
-    g.setColor(1, 1, 1);
-  }
-
-  static black() {
-    g.setColor(0, 0, 0);
-  }
-
-  static paper() {
-    g.setColor(127 / 255, 129 / 255, 131 / 255);
-  }
-
-  static paperWhite() {
-    g.setColor(166 / 255, 166 / 255, 167 / 255);
-  }
-
-  static sun() {
-    g.setColor(249 / 255, 157 / 255, 28 / 255);
-  }
-
-  static sunDark() {
-    g.setColor(202 / 255, 127 / 255, 42 / 255);
-  }
-  static blue() {
-    g.setColor(3 / 255, 146 / 255, 254 / 255);
-  }
-
-  static red() {
-    g.setColor(244 / 255, 54 / 255, 59 / 255);
-  }
-
-  static green() {
-    g.setColor(46 / 255, 204 / 255, 113 / 255);
-  }
-
-  static primary() {
-    g.setColor(50 / 255, 30 / 255, 130 / 255);
-  }
-
-  static tint() {
-    g.setColor(249 / 255, 156 / 255, 57 / 255);
-  }
-
-}
-
-//UIFonts
-class UIFonts {
-  static set6X8(size) {
-    g.setFont("6x8", size);
-  }
-
-  static setVector(size) {
-    g.setFont("Vector", size);
-  }
-
-  static setFont8x16() {
-    g.setFont8x16();
-  }
-
-  static alignCenter() {
-    g.setFontAlign(0, 0);
-  }
-  static alignLeftCenter() {
-    g.setFontAlign(-1, 0);
-  }
-  static alignRightCenter() {
-    g.setFontAlign(1, 0);
-  }
-  static alignRightTop() {
-    g.setFontAlign(1, -1);
-  }
-  static alignLeftTop() {
-    g.setFontAlign(-1, -1);
-  }
-  static alignRightBottom() {
-    g.setFontAlign(1, 1);
-  }
-  static alignLeftBottom() {
-    g.setFontAlign(-1, 1);
-  }
-  static alignCenterTop() {
-    g.setFontAlign(0, -1);
-  }
-  static alignCenterBottom() {
-    g.setFontAlign(0, 1);
-  }
-}
-
-
 //Clock View class
 class ClockView {
-
   constructor() {
-    this.pRad = Math.PI / 180;
-    this.faceRad = 97;
-  }
-
-  loadView() {
+    "compiled";
+  } loadView() {
+    "compiled";
     this.resetDots();
     this.renderClock();
-  }
-
-  drawDot(angle) {
-    //Large dot in each 30 degrees
+  } drawDot(angle) {
+    "compiled";
     const radius = (angle % 30) ? 2.5 : 5;
-    const a = angle * this.pRad;
-    const x = LCDAttr.centerX + Math.sin(a) * this.faceRad;
-    const y = LCDAttr.centerY - Math.cos(a) * this.faceRad;
+    const a = angle * Math.PI / 180;
+    const x = 120 + Math.sin(a) * 97;
+    const y = 133 - Math.cos(a) * 97;
     g.drawCircle(x, y, radius);
     g.fillCircle(x, y, radius - 2);
-  }
-
-  resetDots() {
-    UIColors.primary();
+  } resetDots() {
+    "compiled";
+    g.setColor(50 / 255, 30 / 255, 130 / 255);
     for (let i = 0; i < 60; i++) {
       this.drawDot((360 * i) / 60);
     }
-  }
-
-  renderClock() {
-    let currentDate = new Date();
-    const currentSec = currentDate.getSeconds();
+  } renderClock() {
+    "compiled";
+    let currentSec = new Date().getSeconds();
     for (let i = 0; i < 60; i++) {
       if (i > currentSec) {
-        UIColors.primary();
+        g.setColor(50 / 255, 30 / 255, 130 / 255);
       } else if (i === currentSec) {
-        UIColors.green();
+        g.setColor(46 / 255, 204 / 255, 113 / 255);
       } else {
-        UIColors.blue();
+        g.setColor(3 / 255, 146 / 255, 254 / 255);
       }
       this.drawDot((360 * i) / 60);
     }
   }
 }
-
 //TimeView Class
 class TimeView {
   constructor() {
-    this.margin = 5;
-    this.pad = 1;
-    this.lineWidth = 40;
-  }
-
-  //Load method
+    "compiled";
+    this.arr = this.getTime();
+  }  //Load method
   loadView() {
+    "compiled";
     this.renderDate();
     this.renderTime();
-  }
-
-  //Render methods
+  }  //Render methods  
   renderDate() {
-    let date = this.getTime()[3];
-    UIFonts.setVector(15);
-    UIColors.black();
-    UIFonts.alignCenter();
-    g.drawString(date[1], imgCal.width / 2 + this.pad, imgCal.height / 2 + 3);
-    let dateStr = date[0] + " " + date[2];
-    UIColors.white();
-    UIFonts.set6X8(1);
-    UIFonts.alignLeftBottom();
-    g.drawString(dateStr, imgCal.width + 2, imgCal.height - this.margin + this.pad);
-    UIFonts.alignLeftBottom();
-    UIFonts.set6X8(1);
-    g.drawString(date[3], imgCal.width + 2, imgCal.height / 2);
-  }
-
-  renderTime() {
-    let arr = this.getTime();
-    UIFonts.alignCenterBottom();
-    UIFonts.setVector(40);
-    let timeStr = arr[0] + ":" + arr[1];
-    g.drawString(timeStr, LCDAttr.centerX + 2, LCDAttr.centerY - (2 * this.margin));
+    "compiled";
+    g.drawImage(getImgCal());
+    g.setFont("Vector", 15);
+    g.setColor(0, 0, 0);
+    g.setFontAlign(0, 0);
+    g.drawString(this.arr[3][2], 16, 18);
+    let dateStr = this.arr[3][1] + " " + this.arr[3][3];
+    g.setColor(1, 1, 1);
+    g.setFont("6x8", 1);
+    g.setFontAlign(-1, 1);
+    g.drawString(dateStr, 32, 26);
+    g.drawString(this.arr[3][0], 32, 15);
+  } renderTime() {
+    "compiled";
+    g.setFontAlign(0, 1);
+    g.setFont("Vector", 40);
+    let timeStr = this.arr[0] + ":" + this.arr[1];
+    g.drawString(timeStr, 122, 123);
     let timeStrWidth = g.stringWidth(timeStr);
-    UIFonts.alignLeftBottom();
-    UIFonts.setVector(15);
-    g.drawString(arr[2], LCDAttr.centerX + timeStrWidth / 2, LCDAttr.centerY - 15);
-    UIColors.blue();
-    g.drawLine(LCDAttr.centerX - this.lineWidth, LCDAttr.centerY, LCDAttr.centerX + this.lineWidth, LCDAttr.centerY);
+    g.setFontAlign(-1, 1);
+    g.setFont("Vector", 15);
+    g.drawString(this.arr[2], 120 + timeStrWidth / 2, 118);
+    g.setColor(3 / 255, 146 / 255, 254 / 255);
+    g.drawLine(80, 133, 160, 133);
   }
-
-  //Utilities
   getTime() {
+    "compiled";
     let date = new Date();
+    let dateStr = date.toString().split(" ").slice(0, 4);
     var hr = date.getHours();
     var min = date.getMinutes();
     var meridian = "AM";
@@ -283,72 +137,61 @@ class TimeView {
     }
     let hrStr = ("0" + hr).substr(-2);
     let minStr = ("0" + min).substr(-2);
-    var dateStr = locale.date(date).split(" ");
-    dateStr.push(locale.dow(date, 1));
     return [hrStr, minStr, meridian, dateStr];
   }
-
 }
-
 //StepView Class
+var total = 0;
 class StepView {
   constructor() {
-    this.iconHeight = imgStep.height;
-    this.iconWidth = imgStep.width;
-    this.goal = 10000;
-    this.remaining = 10000;
+    "compiled";
+    this.goal = 50;
+    this.remaining = 50;
     this.steps = 0;
   }
-
   loadView() {
+    "compiled";
     this.steps = this.getStep();
     this.renderSteps();
     this.renderProgress();
   }
-
   renderSteps() {
-    let icon_x = LCDAttr.centerX - 40;
-    let icon_y = LCDAttr.centerY + 8;
-    g.drawImage(imgStep, icon_x, icon_y);
-    UIColors.green();
-    UIFonts.set6X8(1);
-    UIFonts.alignLeftTop();
-    g.drawString("STEPS", icon_x + this.iconWidth, icon_y + 5);
+    "compiled";
+    g.drawImage(getImgStep(), 80, 141);
+    g.setColor(46 / 255, 204 / 255, 113 / 255);
+    g.setFont("6x8", 1);
+    g.setFontAlign(-1, -1);
+    g.drawString("STEPS", 115, 146);
     var str_height = g.getFontHeight();
-    UIColors.white();
-    //UIFonts.setTeleText();
-    UIFonts.setVector(20);
-    g.drawString(this.steps, icon_x + this.iconWidth, icon_y + str_height + 10);
-
+    g.setColor(1, 1, 1);
+    g.setFont("Vector", 20);
+    g.drawString(this.steps, 115, 151 + str_height);
     str_height = g.getFontHeight();
-    UIColors.white();
-    UIFonts.set6X8(1);
-    g.drawString("Remaining " + this.remaining, icon_x, icon_y + 2 * str_height + 15);
-    UIFonts.alignCenter();
-    g.drawString("Siegen", LCDAttr.centerX, 67);
+    g.setColor(1, 1, 1);
+    g.setFont("6x8", 1);
+    g.drawString("Remaining " + this.remaining, 80, 156 + 2 * str_height);
+    g.setFontAlign(0, 0);
+    g.drawString("Siegen", 120, 67);
   }
-
   renderProgress() {
-    let boxWidth = 100;
-    let boxheight = 6;
-    let x = LCDAttr.centerX - boxWidth / 2;
-    let y = LCDAttr.height - 60;
-    UIColors.green();
-    g.drawRect(x, y, x + boxWidth, y + boxheight);
+    "compiled";
+    g.setColor(46 / 255, 204 / 255, 113 / 255);
+    g.drawRect(70, 180, 170, 186);
     var fillWidth = 0;
     if (this.steps >= this.goal) {
-      fillWidth = boxWidth - 4;
+      fillWidth = 96;
+      g.fillRect(72, 182, 168, 184);
+    } else if (this.steps == 0) {
+      fillWidth = 0;
     } else {
-      fillWidth = (this.steps / this.goal) * boxWidth;
+      fillWidth = (this.steps / this.goal) * 100;
+      g.fillRect(72, 182, 72 + fillWidth, 186);
     }
-    UIColors.green();
-    g.fillRect(x + 2, y + 2, x + 1 + fillWidth, y + boxheight - 2);
   }
-
   //Static data,
-  //To do : Use acceleration functions.
   getStep() {
-    let val = 7576;
+    "compiled";
+    let val = total;
     if (val >= this.goal) {
       this.remaining = 0;
     } else {
@@ -357,144 +200,65 @@ class StepView {
     return val;
   }
 }
-
-
-/* 
-  Note Taking App
-  AppIndex = 2
-  Swipe right to open.
-  Swipe left to close.
-  Instantiates Keyboard
-*/
-class NoteApp {
+//ReadStep
+class ReadStep {
   constructor() {
-    this.note = InfoType;
-    this.keyboard = new Keyboard(this.renderText);
-    this.file = require("Storage").open("notes.csv", "a");
-    this.noteDate = new TimeView().getTime();
+    this.csv_index = 0;
+    this.len = require("Storage").read("steps.csv").split("\r\n").length;
+    this.acc = new Array(3);
+    this.prevPeak = 0;
   }
-
-  //Load view of note taking app.
-  loadView() {
-    g.clear();
-    this.keyboard.initFunc();
-    UIFonts.alignLeftTop();
-    UIColors.black();
-    g.fillRect(0, 0, LCDAttr.width, 120);
-    UIColors.white();
-    UIFonts.setVector(15);
-    g.drawString(this.note, 10, 20);
-    UIColors.sun();
-    g.drawRect(5, 15, LCDAttr.width - 5, 120 - 5);
+  readStep() {
+    "compiled";
+    let stepFile = require("Storage").read("steps.csv").split("\r\n").splice(this.csv_index, 1).map((x) => Number(x));
+    return stepFile[0];
   }
-
-  //Render typed text.
-  renderText(str, reset, update) {
-    this.note = reset ? "" : this.note;
-    var tempNote = this.note;
-    this.note = this.note.slice(0, update ? -2 : -1);
-    if (str == "\b" && this.note.length > 0) {
-      this.note = this.note.slice(0, -1);
-    } else if (str !== "\b") {
-      if (str === "\n") {
-        if (this.note.slice(-1)[0] === "\n") {
-          return;
+  countStep() {
+    "compiled";
+    if (this.acc.length === 3) {
+      this.acc.shift();
+    }
+    if (this.csv_index < this.len - 1) {
+      this.acc.push(this.readStep());
+      this.compareStep();
+      this.csv_index++;
+    } else {
+      this.csv_index = 0;
+      this.acc.length = 0;
+      this.acc = new Array(3);
+      total = 0;
+      this.prevPeak = 0;
+    }
+  } compareStep() {
+    "compiled";
+    if (this.acc[2] != undefined) {
+      if (this.acc[1] > this.acc[0] && this.acc[1] > this.acc[2]) {
+        if (this.acc[1] > 3.5) {
+          if (this.csv_index > this.prevPeak + 10) {
+            total += 1;
+            this.prevPeak = this.csv_index - 2;
+          }
         }
       }
-      this.note = reset ? str : this.note + str;
-      let arrSent = this.note.split("\n");
-      let lastSent = arrSent.slice(-1)[0];
-      let tempWords = lastSent.split(" ");
-      let lastWord = tempWords.slice(-1)[0];
-      let lastWordWidth = g.stringWidth(lastWord);
-      let lastSentWidth = g.stringWidth(lastSent);
-      if (lastSentWidth > 140) {
-        this.note = arrSent.slice(0, -1).join("\n");
-        this.note += (this.note.length > 5) ? "\n" : "";
-        this.note += tempWords.slice(0, -1).join(" ") + "\n";
-        this.note += tempWords.slice(-1)[0];
-      }
     }
-
-    this.note += "_";
-    let textHeight = g.getFontHeight() * this.note.split("\n").length;
-    if (textHeight > 60) {
-      this.note = tempNote;
-      return;
-    }
-    UIFonts.alignLeftTop();
-    UIColors.black();
-    g.fillRect(0, 0, LCDAttr.width, 120);
-    UIColors.sun();
-    g.drawRect(5, 15, LCDAttr.width - 5, 120 - 5);
-    UIColors.white();
-    UIFonts.setVector(15);
-    Note = this.note.slice(0, -1);
-    g.drawString(this.note, 10, 20);
-  }
-
-  //Show dialog for note.
-  showDialog(isSave) {
-    UIColors.black();
-    g.fillRect(0, 0, LCDAttr.width, 120);
-    UIColors.black();
-    g.fillRect(20, 30, 220, 100);
-    UIColors.white();
-    g.drawRect(20, 30, 220, 100);
-    g.drawRect(22, 32, 218, 98);
-    UIFonts.alignCenter();
-    UIFonts.setVector(20);
-
-    if (isSave) {
-      UIColors.sun();
-    } else {
-      UIColors.red();
-    }
-    g.drawString(isSave ? "Saving..." : "Cancelling...", 120, 60);
-  }
-
-  //Save note to csv.
-  saveNote() {
-    this.savingNote = true;
-    Note = Note.trim();
-    if (Note == InfoType || Note.length == 0) {
-      this.showDialog(false);
-    } else {
-      Note = Note.replace("\n", "*0L");
-      //[hrStr, minStr, meridian, dateStr]
-      let time = this.noteDate[0] + ":" + this.noteDate[1] + this.noteDate[2];
-      let date = this.noteDate[3].join(" ");
-      var csv = [
-        Note,
-        time,
-        date
-      ];
-      // Write data here
-      this.file.write(csv.join(",") + "\n");
-      this.showDialog(true);
-    }
-    Note = InfoType;
   }
 }
-
-/*
-  Keyboard class 
-  Keyboard views and Functions
-*/
-
-class Keyboard {
-
-  constructor(callback) {
+//NoteApp
+var Note = "Type here!";
+class NoteApp {
+  constructor() {
+    "compiled";
+    this.resetAll();
+  }
+  resetAll() {
+    this.note = "Type here!";
+    this.file = require("Storage").open("notes.csv", "a");
     this.savingNote = false;
     this.pressTime = 0;
     this.prevPressTime = 0;
     this.releaseTime = 0;
     this.charIndex = 0;
     this.reset = true;
-    this.callback = callback;
-    this.enter = "ENT";
-    this.backsapce = "BKS";
-    this.space = "SPC";
     this.altKeys = false;
     this.selectedKey = 1;
     this.prevSelectedKey = 0;
@@ -503,15 +267,11 @@ class Keyboard {
       NUMBER: ['#7F8183', '#A6A6A7'],
       FUNC: ['#F99D1C', '#CA7F2A'],
     };
-    this.KBD_HEIGHT = LCDAttr.height / 2;
-    this.KBD_WIDTH = LCDAttr.width;
-    this.KEY_HEIGHT = this.KBD_HEIGHT / 3;
-    this.KEY_WIDTH = this.KBD_WIDTH / 5;
     this.KEYS = {
       0: {
         MAIN_VAL: "1",
-        SEC_VAL: [".", ",", "?", "!"],
-        ALT_VAL: [".", ",", "?", "!"],
+        SEC_VAL: [".", "?", "!"],
+        ALT_VAL: [".", "?", "!"],
         COLOR: this.COLORS.NUMBER
       },
       1: {
@@ -589,7 +349,7 @@ class Keyboard {
       13: {
         MAIN_VAL: "@",
         SEC_VAL: ["-", "_", "\\"],
-        ALT_VAL: ["%", "/"],
+        ALT_VAL: ["%", "/", "\\"],
         COLOR: this.COLORS.NUMBER
       },
       14: {
@@ -600,45 +360,155 @@ class Keyboard {
       }
     };
   }
-
+  getTime() {
+    "compiled";
+    let date = new Date();
+    let dateStr = date.toString().split(" ").slice(0, 4);
+    var hr = date.getHours();
+    var min = date.getMinutes();
+    let hrStr = ("0" + hr).substr(-2);
+    let minStr = ("0" + min).substr(-2);
+    return [hrStr, minStr, dateStr];
+  }
+  //Load view of note taking app.
+  loadView() {
+    "compiled";
+    g.clear();
+    this.initFunc();
+    g.setFontAlign(-1, -1);
+    g.setColor(0, 0, 0);
+    g.fillRect(0, 0, 240, 120);
+    g.setColor(1, 1, 1);
+    g.setFont("Vector", 15);
+    g.drawString(this.note, 10, 20);
+    g.setColor(249 / 255, 157 / 255, 28 / 255);
+    g.drawRect(5, 15, 235, 115);
+  }
+  //Render typed text.
+  renderText(str, reset, update) {
+    "compiled";
+    this.note = reset ? "" : this.note;
+    var tempNote = this.note;
+    this.note = this.note.slice(0, update ? -2 : -1);
+    if (str == "\b" && this.note.length > 0) {
+      this.note = this.note.slice(0, -1);
+    } else if (str !== "\b") {
+      if (str === "\n") {
+        if (this.note.slice(-1)[0] === "\n") {
+          return;
+        }
+      }
+      this.note = reset ? str : this.note + str;
+      let arrSent = this.note.split("\n");
+      let lastSent = arrSent.slice(-1)[0];
+      let tempWords = lastSent.split(" ");
+      let lastWord = tempWords.slice(-1)[0];
+      let lastWordWidth = g.stringWidth(lastWord);
+      let lastSentWidth = g.stringWidth(lastSent);
+      if (lastSentWidth > 140) {
+        this.note = arrSent.slice(0, -1).join("\n");
+        this.note += (this.note.length > 5) ? "\n" : "";
+        this.note += tempWords.slice(0, -1).join(" ") + "\n";
+        this.note += tempWords.slice(-1)[0];
+      }
+    } this.note += "_";
+    let textHeight = g.getFontHeight() * this.note.split("\n").length;
+    if (textHeight > 60) {
+      this.note = tempNote;
+      return;
+    }
+    g.setFontAlign(-1, -1);
+    g.setColor(0, 0, 0);
+    g.fillRect(0, 0, 240, 120);
+    g.setColor(249 / 255, 157 / 255, 28 / 255);
+    g.drawRect(5, 15, 235, 115);
+    g.setColor(1, 1, 1);
+    g.setFont("Vector", 15);
+    Note = this.note.slice(0, -1);
+    g.drawString(this.note, 10, 20);
+  }
+  //Show dialog for note.
+  showDialog(isSave) {
+    "compiled";
+    g.setColor(0, 0, 0);
+    g.fillRect(0, 0, 240, 120);
+    g.setColor(0, 0, 0);
+    g.fillRect(20, 30, 220, 100);
+    g.setColor(1, 1, 1);
+    g.drawRect(20, 30, 220, 100);
+    g.drawRect(22, 32, 218, 98);
+    g.setFontAlign(0, 0);
+    g.setFont("Vector", 20); if (isSave) {
+      g.setColor(249 / 255, 157 / 255, 28 / 255);
+    } else {
+      g.setColor(244 / 255, 54 / 255, 59 / 255);
+    }
+    g.drawString(isSave ? "Saving..." : "Cancelling...", 120, 60);
+  }
+  //Save note to csv.
+  saveNote() {
+    "compiled";
+    this.savingNote = true;
+    Note = Note.trim();
+    if (Note == "Type here!" || Note.length == 0) {
+      this.showDialog(false);
+    } else {
+      Note = Note.replace("\n", "*0L");
+      let strTime = this.getTime();
+      let time = strTime[0] + ":" + strTime[1];
+      let date = strTime[2].join(" ");
+      var csv = [
+        Note,
+        time,
+        date
+      ];
+      // Write data here
+      this.file.write(csv.join(",") + "\n");
+      this.showDialog(true);
+    }
+    Note = "Type here!";
+  }
   //Draw single key.
   drawKey(key, area, center) {
+    "compiled";
     let tempSelected = (key == this.selectedKey);
     let value = this.KEYS[key];
     g.setColor(value.COLOR[tempSelected ? 1 : 0]);
     g.fillRect(area[0], area[1], area[2], area[3]);
-    UIColors.white();
-    UIFonts.set6X8(1);
+    g.setColor(1, 1, 1);
+    g.setFont("6x8", 1);
     switch (key) {
-      case 4:
-        g.drawImage(imgBks, area[0] + 10, area[1] + 5);
+      case 4: g.fillPoly([area[0] + 20, area[1] + 10, area[0] + 5, area[1] + 16, area[0] + 20, area[1] + 22]);
+        g.fillRect(area[0] + 20, area[1] + 15, area[0] + 40, area[1] + 17);
         break;
-      case 9:
-        g.drawImage(imgEnt, area[0] + 10, area[1] + 5);
+      case 9: g.fillPoly([area[0] + 20, area[1] + 15, area[0] + 5, area[1] + 21, area[0] + 20, area[1] + 27]);
+        g.fillRect(area[0] + 20, area[1] + 20, area[0] + 42, area[1] + 22);
+        g.fillRect(area[0] + 40, area[1] + 10, area[0] + 42, area[1] + 20);
         break;
       case 14:
-        UIFonts.alignCenter();
+        g.setFontAlign(0, 0);
         g.drawString(value.MAIN_VAL, center[0], center[1]);
         break;
       case 11:
-        g.drawImage(imgSpace, area[0] + 9, area[1] + 5);
-        UIFonts.alignCenterTop();
-        UIFonts.setVector(12);
+        g.fillRect(area[0] + 8, area[1] + 17, area[0] + 10, area[1] + 27);
+        g.fillRect(area[0] + 8, area[1] + 25, area[0] + 38, area[1] + 27);
+        g.fillRect(area[0] + 38, area[1] + 17, area[0] + 40, area[1] + 27);
+        g.setFontAlign(0, -1);
+        g.setFont("Vector", 12);
         g.drawString(value.MAIN_VAL, center[0], area[1] + 5);
         break;
       default:
-        UIFonts.alignCenterTop();
-        UIFonts.setFont8x16();
+        g.setFontAlign(0, -1);
+        g.setFont("6x8", 1);
         g.drawString(value.MAIN_VAL, center[0], area[1] + 5);
-        UIFonts.alignCenterBottom();
-        UIFonts.set6X8(1);
+        g.setFontAlign(0, 1);
         let secStr = this.altKeys ? value.ALT_VAL.join("") : value.SEC_VAL.join("");
         g.drawString(secStr, center[0], area[3] - 10);
     }
   }
-
   //Moving key press.
   moveIndex(d) {
+    "compiled";
     switch (d) {
       case "U": {
         if (this.selectedKey > 4) {
@@ -685,23 +555,19 @@ class Keyboard {
           str = chars[itemIndex];
         } else {
           str = item.MAIN_VAL;
-        }
-
-        if (itemIndex > 0) {
+        } if (itemIndex > 0) {
           update = true;
-        }
-
-        if (str === "abc/ABC") {
+        } if (str === "abc/ABC") {
           this.altKeys = !this.altKeys;
         } else {
-          this.callback(str, this.reset, update);
+          this.renderText(str, this.reset, update);
           this.reset = false;
         }
         break;
       }
       case "NUM": {
         let str = this.KEYS[this.selectedKey].MAIN_VAL;
-        this.callback(str, this.reset);
+        this.renderText(str, this.reset);
         break;
       }
       default:
@@ -709,19 +575,19 @@ class Keyboard {
     }
     this.drawKeys();
   }
-
   //Action to BTN2 press
   listenBTN2(press) {
+    "compiled";
     if (press === true) {
       this.prevPressTime = this.pressTime;
       digitalWrite(LED2, 1);
       this.pressTime = new Date();
     }
   }
-
   //Action to BTN2 release 
   //Calculate keypad press speed.
   pressCount() {
+    "compiled";
     digitalWrite(LED2, 0);
     this.releaseTime = new Date();
     let diff = this.releaseTime - this.pressTime;
@@ -737,212 +603,238 @@ class Keyboard {
       this.moveIndex("=");
     }
   }
-
   //Init method
   initFunc() {
+    "compiled";
     g.clear();
     // listen to BTN2 press
     setWatch(_ => this.listenBTN2(true), BTN2, { repeat: true, edge: 'rising' });
     // listen to BTN2 release
-    setWatch(_ => this.pressCount(), BTN2, { repeat: true, edge: 'falling' });
-
-    // listen to BTN5 button release
+    setWatch(_ => this.pressCount(), BTN2, { repeat: true, edge: 'falling' });    // listen to BTN5 button release
     setWatch(_ => this.moveIndex("R"), BTN5, { repeat: true, edge: 'falling' });
     // listen to BTN4 button release
-    setWatch(_ => this.moveIndex("L"), BTN4, { repeat: true, edge: 'falling' });
-
-    setWatch(_ => this.moveIndex("U"), BTN1, { repeat: true });
+    setWatch(_ => this.moveIndex("L"), BTN4, { repeat: true, edge: 'falling' }); setWatch(_ => this.moveIndex("U"), BTN1, { repeat: true });
     setWatch(_ => this.moveIndex("D"), BTN3, { repeat: true });
     this.drawKeys();
   }
-
   //Method to draw keypad.
   drawKeys() {
+    "compiled";
     for (var k in this.KEYS) {
-      let x1 = this.KEY_WIDTH * (k % 5);
-      let x2 = x1 + this.KEY_WIDTH;
-      let y1 = this.KBD_HEIGHT + this.KEY_HEIGHT * (parseInt(k / 5));
-      let y2 = y1 + this.KEY_HEIGHT;
+      let x1 = 48 * (k % 5);
+      let x2 = x1 + 48;
+      let y1 = 120 + 40 * (parseInt(k / 5));
+      let y2 = y1 + 40;
       let area = [x1, y1, x2, y2];
       let center = [(x1 + x2) / 2, (y1 + y2) / 2];
       this.drawKey(k, area, center);
     }
   }
 }
-
-/*
-//NotepadList App Functions
-//AppIndex = 0
-//App to show notes details.
-*/
-//Global vars
-var notesList = {};
-var subMenu = {};
-var notes = [];
-var selectedNote = 0;
-var f = require("Storage").open("notes.csv", "r");
-var l = "";
-
-//Init func
-function initNoteList() {
-  //load note list
-  notesList = {};
-  subMenu = {};
-  notes = [];
-  selectedNote = 0;
-  l = "";
-  f = require("Storage").open("notes.csv", "r");
-  readNotes();
-}
-
-//Read notes from CSV
-function readNotes() {
-  notes = [];
-  l = " ";
-
-  while (l !== undefined) {
-    l = f.readLine();
-    if (l === undefined) {
-      break;
+//NoteList
+class NoteViewer {
+  constructor() {
+    "compiled";
+    this.f = require("Storage").open("notes.csv", "r");
+    this.selectedNote = 0;
+    this.notes = [];
+    this.prompt = false;
+  }
+  readNotes() {
+    "compiled";
+    this.f = require("Storage").open("notes.csv", "r");
+    this.selectedNote = 0;
+    this.prompt = false;
+    l = " ";
+    while (l !== undefined) {
+      l = this.f.readLine();
+      if (l === undefined) {
+        break;
+      }
+      let str = this.format(l);
+      this.notes.push(str);
     }
-    let str = String(l);
-    notes.push(str);
+    this.showNote();
+    this.listenBtn();
   }
-  showList(notes);
-}
-
-//Show Note List.
-function showList(n) {
-  notesList = {
-    "": { title: "Notes List" }
-  };
-  var i = 0;
-  for (i = 0; i < n.length; i++) {
-    let item = n[i];
-    let strArr = String(item).split(",");
-    let t = strArr[0].replace("*0L", " ").slice(0, 7);
-    notesList[i + 1 + "." + t] = viewNote.bind(this, i);
+  format(val) {
+    "compiled";
+    let arr = String(val).split(",");
+    return arr;
   }
-  if (notes.length == 0) {
-    notesList.Empty = function () { };
-  }
-  E.showMenu(notesList);
-}
+  showNote() {
+    "compiled";
+    let index = this.selectedNote;
+    var note;
+    var time = "";
+    var date = "";
+    var msg = "Notes Not Available.";
+    if (this.notes.length > 0) {
+      note = this.notes[index];
+      time = note[1];
+      date = note[2];
+      msg = note[0].replace("*0L", "\n");
+    }
+    g.setColor(1, 1, 1);
+    g.fillRect(0, 0, 240, 240);
+    g.setColor(249 / 255, 157 / 255, 28 / 255);
+    g.drawRect(10, 10, 230, 230);
+    g.setFont("Vector", 12);
+    g.setFontAlign(1, 1);
+    g.setColor(249 / 255, 156 / 255, 57 / 255);
+    g.drawString(date, 220, 25);
+    g.drawString(time, 220, 43);
 
-//Draw Note Detail.
-function viewNote(index) {
-  E.showMenu();
-  selectedNote = index;
-  let note = notes[index];
-  let strArr = note.split(",");
-  let data = strArr;
-  let time = data[1];
-  let date = data[2];
-  let msg = data[0].replace("*0L", "\n");
-  UIColors.white();
-  g.fillRect(0, 0, 240, 240);
-  UIColors.sun();
-  g.drawRect(10, 10, 230, 230);
-  UIFonts.setVector(12);
-  UIFonts.alignRightBottom();
-  UIColors.tint();
-  g.drawString(date, 220, 25);
-  g.drawString(time, 220, 43);
-  UIFonts.alignLeftTop();
-  UIColors.black();
-  UIFonts.setVector(15);
-  g.drawString(msg, 20, 50);
-  UIColors.paper();
-  g.fillRect(60, 190, 180, 220);
-  UIColors.tint();
-  g.drawRect(60, 190, 180, 220);
-  g.drawRect(58, 188, 178, 218);
-  UIColors.sun();
-  UIFonts.alignCenter();
-  g.drawString("Delete", 120, 205);
-  UIColors.paper(); g.drawPoly([232, 120, 240, 120, 236, 117, 240, 120, 236, 123], false);
-  this.listenBtn();
-}
-
-//Listen to btn.
-function listenBtn() {
-  setWatch(showPrompt, BTN2, { 'repeat': true });
-  setWatch(goBack, BTN1, { 'repeat': false });
-}
-
-//Prompt to delete note.
-function showPrompt() {
-  E.showPrompt("Delete Note?").then(function (v) {
-    if (v) {
-      deleteItem(selectedNote);
+    if (note != undefined) {
+      g.setFontAlign(-1, -1);
+      g.setColor(0, 0, 0);
+      g.setFont("Vector", 14);
+      g.drawString("U", 233, 20);
+      g.drawString("D", 233, 200);
+      g.drawString(msg, 20, 50);
+      g.setColor(127 / 255, 129 / 255, 131 / 255);
+      g.fillRect(60, 190, 180, 220);
+      g.setColor(249 / 255, 156 / 255, 57 / 255);
+      g.drawRect(60, 190, 180, 220);
+      g.drawRect(58, 188, 178, 218);
+      g.setColor(249 / 255, 157 / 255, 28 / 255);
+      g.setFontAlign(0, 0);
+      g.drawString("Delete", 120, 205);
+      g.setColor(127 / 255, 129 / 255, 131 / 255);
+      g.drawPoly([232, 120, 240, 120, 236, 117, 240, 120, 236, 123], false);
     } else {
-      viewNote(selectedNote);
+      g.setColor(0, 0, 0);
+      g.fillRect(30, 80, 210, 160);
+      g.setColor(249 / 255, 157 / 255, 28 / 255);
+      g.drawRect(32, 82, 208, 158);
+      g.setFont("Vector", 15);
+      g.setFontAlign(0, 0);
+      g.setColor(1, 1, 1);
+      g.drawString(msg, 120, 120);
     }
-  });
-}
-
-//Go back to Notes List.
-function goBack() {
-  E.showMenu(notesList);
-}
-
-//Delete Note
-function deleteItem(i) {
-  notes.splice(i, 1);
-  removeNote(i);
-  notes = [];
-  initNoteList();
-}
-
-//Remove Note from CSV file.
-function removeNote(index) {
-  f.erase();
-  f = require("Storage").open("notes.csv", "a");
-  var i = 0;
-  for (i = 0; i < notes.length; i++) {
-    var items = notes[i].split(",");
-    let n = items[0];
-    let t = items[1];
-    var d = items[2];
-    d = d.replace("\n", "");
-    let csv = [n, t, d].join(",");
-    f.write(csv + "\n");
+  }
+  listenBtn() {
+    "compiled";
+    setWatch(_ => this.updateIndex("U"), BTN1, { repeat: true });
+    setWatch(_ => this.updateIndex("D"), BTN3, { repeat: true });
+    setWatch(_ => this.updateIndex("M"), BTN2, { repeat: true });
+    setWatch(_ => this.goBack(), BTN5, { repeat: true });
+    setWatch(_ => this.updateIndex("X"), BTN4, { repeat: true });
+  }
+  updateIndex(val) {
+    "compiled";
+    if (this.notes.length > 0) {
+      switch (val) {
+        case "U":
+          if (this.selectedNote > 0 && !this.prompt) {
+            this.selectedNote--;
+            this.showNote();
+          }
+          break;
+        case "D":
+          if (this.selectedNote < (this.notes.length - 1) && !this.prompt) {
+            this.selectedNote++;
+            this.showNote();
+          }
+          break;
+        case "M":
+          if (!this.prompt) {
+            this.showPrompt();
+          }
+          break;
+        case "X":
+          if (this.prompt) {
+            this.deleteItem();
+          }
+          break;
+        default:
+          break;
+      }
+    }
+  }
+  showPrompt() {
+    this.prompt = true;
+    g.setColor(0, 0, 0);
+    g.fillRect(30, 80, 210, 160);
+    g.setColor(249 / 255, 157 / 255, 28 / 255);
+    g.drawRect(32, 82, 208, 158);
+    g.setFont("Vector", 18);
+    g.setFontAlign(0, 0);
+    g.setColor(1, 1, 1);
+    g.drawString("Delete Note?", 120, 100);
+    g.setFont("Vector", 14);
+    g.drawString("Ok", 80, 132);
+    g.drawString("Cancel", 160, 130);
+    g.drawRect(50, 120, 110, 140);
+    g.drawRect(130, 120, 190, 140);
+  }
+  goBack() {
+    if (this.prompt) {
+      this.prompt = false;
+      this.showNote();
+    }
+  }
+  deleteItem() {
+    let i = this.selectedNote;
+    this.notes.splice(i, 1);
+    this.removeNote(i);
+    this.notes = [];
+    this.readNotes();
+  }
+  removeNote(index) {
+    this.f.erase();
+    this.f = require("Storage").open("notes.csv", "a");
+    var i = 0;
+    for (i = 0; i < this.notes.length; i++) {
+      var items = this.notes[i];
+      let n = items[0];
+      let t = items[1];
+      var d = items[2];
+      d = d.replace("\n", "");
+      let csv = [n, t, d].join(",");
+      this.f.write(csv + "\n");
+    }
   }
 }
-
-/*
-Entry point
-*/
-
-//Timer ArrowFunctions
-const startTimers = () => {
-  timer = setInterval(loadView, 500);
-};
-
-const stopTimers = () => {
-  clearInterval(timer);
-};
-
-
-//Load function
-function loadView() {
-  g.clear();
-  g.setBgColor(0, 0, 0);
-  g.drawImage(imgCal);
-
-  if (appIndex == 1) {
-    let timeView = new TimeView();
-    timeView.loadView();
-
-    let clockView = new ClockView();
-    clockView.loadView();
-
-    let stepView = new StepView();
-    stepView.loadView();
-  }
+//Global Views
+var homeView = new HomeView();
+var readStep = new ReadStep();
+var noteApp, noteList;
+var saving = false;
+function loadHome() {
+  saving = false;
+  homeView = new HomeView();
+  homeView.loadView();
+  noteApp = null;
+  noteList = null;
 }
-
+function loadNote() {
+  noteApp = new NoteApp();
+  noteApp.loadView();
+}
+function loadNoteList() {
+  noteList = new NoteViewer();
+  noteList.readNotes();
+}
+function bootApp() {
+  if (appIndex === 1) {
+    if (prevAppIndex == 2) {
+      if (!saving) {
+        homeView.loadView();
+      }
+    } else {
+      homeView.loadView();
+    }
+  }
+  readStep.countStep();
+}
+//Entry Point
+startTimers = () => {
+  timer = setInterval(bootApp, 100);
+}();
 //Listen swipe
+var appIndex = 1;
+var prevAppIndex = 0;
 Bangle.on('swipe', (sDir) => {
   let prevIndex = appIndex;
   if (sDir == 1) {
@@ -951,42 +843,31 @@ Bangle.on('swipe', (sDir) => {
       appIndex--;
     }
   } else {
-    if (appIndex < (apps.length - 1)) {
+    if (appIndex < 2) {
       prevAppIndex = appIndex;
       appIndex++;
     }
   }
   if (prevIndex !== appIndex) {
-    switchApp();
+    switch (appIndex) {
+      case 0:
+        setTimeout(loadNoteList, 400);
+        break;
+      case 1:
+        E.showMenu();
+        clearWatch();
+        if (prevAppIndex == 2) {
+          saving = true;
+          noteApp.saveNote(this);
+        }
+        setTimeout(loadHome, 400);
+        break;
+      case 2:
+        homeView = null;
+        setTimeout(loadNote, 400);
+        break;
+      default:
+        break;
+    }
   }
 });
-
-//StartTimer ArrowFunction
-const switchApp = () => {
-  switch (appIndex) {
-    case 0:
-      stopTimers();
-      setTimeout(initNoteList, 200);
-      break;
-    case 1:
-      E.showMenu();
-      clearWatch();
-      if (prevAppIndex == 2) {
-        noteApp.saveNote(this);
-        setTimeout(startTimers, 800);
-      } else {
-        startTimers();
-      }
-      break;
-    case 2:
-      stopTimers();
-      noteApp = new NoteApp();
-      noteApp.loadView();
-      break;
-    default:
-      break;
-  }
-};
-
-//Start
-startTimers();
