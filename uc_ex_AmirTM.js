@@ -831,7 +831,8 @@ function bootApp() {
 //Entry Point
 startTimers = () => {
   timer = setInterval(bootApp, 100);
-}();
+};
+startTimers();
 //Listen swipe
 var appIndex = 1;
 var prevAppIndex = 0;
