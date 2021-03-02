@@ -204,7 +204,12 @@ class StepView {
 class ReadStep {
   constructor() {
     this.csv_index = 0;
-    this.len = require("Storage").read("steps.csv").split("\r\n").length;
+    this.file = require("Storage").open("steps.csv", "r");;
+    if (this.file != null) {
+      this.len = require("Storage").read("steps.csv").split("\r\n").length;
+    } else {
+      print("File not uploaded.");
+    }
     this.acc = new Array(3);
     this.prevPeak = 0;
   }
