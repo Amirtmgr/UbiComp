@@ -788,7 +788,7 @@ class NoteViewer {
   }
   removeNote(index) {
     this.f.erase();
-    this.f = require("Storage").open("notes.csv", "a");
+    this.f = require("Storage").read("notes.csv");
     var i = 0;
     for (i = 0; i < this.notes.length; i++) {
       var items = this.notes[i];
