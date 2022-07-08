@@ -1,3 +1,7 @@
+
+//Global variables
+var FILE_NAME = "log.csv";
+
 /* 
 SD Card functions defined:
 1. Initialize SD Card: initSDCard()
@@ -6,6 +10,7 @@ SD Card functions defined:
 4. Write a text to a text file: writeToFile()
 5. Read a text file from a SD Card:readFile()
 */
+
 
 // Initializes SD Card
 function initSDCard() {
@@ -43,9 +48,9 @@ function writeToFile(name = "log.txt", txt = "Test text...") {
     digitalPulse(LED1, 1, 50); // Pulse LED for SD Card operation
     console.log("Write File " + name + "...");
     //Open new file in append mode
-    var f = E.openFile(name, "a");
-    f.write(txt);
-    f.close();
+    var file = E.openFile(name, "a");
+    file.write(txt);
+    file.close();
     console.log("Write Operation Completed..");
     digitalWrite(LED1, 0); // SD Card operation indicator off
 }
@@ -54,13 +59,31 @@ function writeToFile(name = "log.txt", txt = "Test text...") {
 function readFile(name = "log.txt") {
     digitalPulse(LED1, 1, 50); // Pulse LED for SD Card operation
     console.log("Reading " + name + "...");
-    f = E.openFile("log.txt", "r");
-    f.pipe(console.log);
-    f.close();
+    var file = E.openFile("log.txt", "r");
+    file.pipe(console.log);
+    file.close();
     console.log("Read operation completed.");
     digitalWrite(LED1, 0); // SD Card operation indicator off
 }
 
+
+// Log data to CSV file
+function addItem(data, fileName = "log.csv") {
+    digitalPulse(LED1, 1, 50); // Pulse LED for SD Card operation
+    console.log("Logging a new data...");
+    // Open file in append mode
+    var file = E.open(fileName, "a");
+    // Data we want to put in CSV file
+    var csv = [
+        newDate(), // Time to the nearest second
+        data
+    ];
+
+    // Write data here
+    file.write(csv.join(",") + "\n");
+    console.log("New Data Logged");
+    digitalWrite(LED1, 0); // SD Card operation indicator off
+}
 
 //Initialize SD Card
 initSDCard();
